@@ -133,11 +133,16 @@ public static class WebSocketClientExtension
         }
 
         var isFirst = true;
-        var position = sequence.Start;
+        // https://gitee.com/RRQM_Home/TouchSocket/issues/IKIG0V
+        // https://github.com/RRQM/TouchSocket/issues/144
+        var enumerator = sequence.GetEnumerator();
+        var hasNext = enumerator.MoveNext();
 
-        while (sequence.TryGet(ref position, out var memory))
+        while (hasNext)
         {
-            var isLast = position.Equals(sequence.End);
+            var memory = enumerator.Current;
+            hasNext = enumerator.MoveNext();
+            var isLast = !hasNext;
             var frame = new WSDataFrame(memory)
             {
                 FIN = isLast,

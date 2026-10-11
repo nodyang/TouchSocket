@@ -62,6 +62,18 @@ internal sealed class SerialCore : SafetyDisposableObject
 
             if (this.m_serialPort.IsOpen)
             {
+                try
+                {
+                    // SerialPort.Close 会先调用 FlushFileBuffers。若设备启用了硬件流控、
+                    // 蓝牙串口已失去对端，或驱动仍有待发送数据，FlushFileBuffers 可能无限等待。
+                    // 主动关闭属于中止传输，先清空驱动输出队列可避免关闭被未发送数据阻塞。
+                    this.m_serialPort.DiscardOutBuffer();
+                }
+                catch
+                {
+                    // 清空输出队列失败不应阻止后续关闭和句柄释放。
+                }
+
                 this.m_serialPort.Close();
             }
 
